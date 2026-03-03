@@ -1,6 +1,9 @@
 #include "RadimTheWebCrawler.h"
 #include <curl/curl.h>
 #include <regex>
+#include <thread>
+#include <queue>
+#include <unordered_set>
 
 int main(){
 	std::string startWeb = "https://wikipedia.org";
@@ -13,44 +16,63 @@ size_t WriteCallback(void* contents, size_t size, size_t nmemb, void* userp){
 }
 
 void FindWebsites(std::string& startWeb){
-	CURL* curl;
-	CURLcode res;
-	std::string readBuffer;
 
-	curl = curl_easy_init();
+	std::queue<std::string> toVisit;
+    	std::unordered_set<std::string> visited;
 
-  	if (curl){
-		curl_easy_setopt(curl, CURLOPT_URL, startWeb.c_str());
-		curl_easy_setopt(curl, CURLOPT_USERAGENT, "RadimTheWebCrawler");
-		curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
-		curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
-		curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
-		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
-		curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
-		res = curl_easy_perform(curl);
-		curl_easy_cleanup(curl);
+	toVisit.push(startWeb);
+	visited.insert(startWeb);
 
-		if(res != CURLE_OK) {
-                        std::cerr << "cURL ERROR: " << curl_easy_strerror(res) << std::endl;
-                } else {
-			std::regex rgx(R"-(<a\s+[^>]*href="([^"]+)")-");
-			std::smatch match;
-			while (std::regex_search(readBuffer, match, rgx)){
-				std::string rawURL = match[1].str();
-				std::string validURL = "";
-				if (rawURL.starts_with("https://") || rawURL.starts_with("http://") || rawURL.starts_with("ftp://")){
-					validURL = rawURL;
-				}else{
-					validURL = MakeUrlValid(startWeb, rawURL);
+	while (!toVisit.empty()){
+		std::string currentWeb = toVisit.front();
+		toVisit.pop();
+		
+		CURL* curl;
+		CURLcode res;
+		std::string readBuffer;
+
+		curl = curl_easy_init();
+
+  		if (curl){
+			curl_easy_setopt(curl, CURLOPT_URL, currentWeb.c_str());
+			curl_easy_setopt(curl, CURLOPT_USERAGENT, "RadimTheWebCrawler");
+			curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+			curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
+			curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
+			curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+			curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
+			res = curl_easy_perform(curl);
+			curl_easy_cleanup(curl);
+	
+			if(res != CURLE_OK) {
+	                        std::cerr << "cURL ERROR: " << curl_easy_strerror(res) << std::endl;
+        	        } else {
+				std::regex rgx(R"-(<a\s+[^>]*href="([^"]+)")-");
+				std::smatch match;
+				while (std::regex_search(readBuffer, match, rgx)){
+					std::string rawURL = match[1].str();
+					std::string validURL = "";
+					if (rawURL.starts_with("https://") || rawURL.starts_with("http://") || rawURL.starts_with("ftp://")){
+						validURL = rawURL;
+					}else{
+						validURL = MakeUrlValid(currentWeb, rawURL);
+					}
+	
+					if(validURL != ""){
+						if(visited.find(validURL) == visited.end()){
+							std::cout << validURL << std::endl;
+							visited.insert(validURL);
+							toVisit.push(validURL);
+						}
+
+					}
+					readBuffer = match.suffix().str();
 				}
-
-				if(validURL != "")
-					std::cout << validURL << std::endl;
-				readBuffer = match.suffix().str();
 			}
-                }
 
 		
+		}
+		std::this_thread::sleep_for(std::chrono::seconds(1));
 	}
 
 }

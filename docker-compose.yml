@@ -1,0 +1,33 @@
+version: '29.2.1'
+
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: radim_db
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: tajne_heslo
+      POSTGRES_DB: search_engine
+    ports:
+      - "5432:5432"    
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  crawler:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    container_name: radim_crawler
+    depends_on:
+      - db
+    environment:
+      - DB_HOST=db
+      - DB_USER=admin
+      - DB_PASS=tajne_heslo
+      - DB_NAME=search_engine
+    restart: on-failure
+
+volumes:
+  pgdata:
