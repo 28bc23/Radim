@@ -15,13 +15,13 @@ int main(){
   }
 }
 
-void FindNumWebsites(int max, char* startWeb, char**& outWebs, int& size, int& cap){
+void FindNumWebsites(int& max, char*& startWeb, char**& outWebs, int& size, int& cap){
   for (int i = 0; i < max; i++){
     AppendString(&outWebs, size, cap, startWeb);
   }
 }
 
-void AppendString(char*** charArr, int& size, int& cap, char* str){
+void AppendString(char*** charArr, int& size, int& cap, char*& str){
   ExtendArray(charArr, size, cap);
   (*charArr)[size] = new char[strlen(str) + 1];
   strcpy((*charArr)[size], str);
