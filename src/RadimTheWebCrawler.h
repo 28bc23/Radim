@@ -1,1 +1,3 @@
-void FindNumWebsites(int max, const char* startWeb, const char** outWebs);
+void FindNumWebsites(int max, char* startWeb, char**& outWebs, int& size, int& cap);
+void AppendString(char*** charArr, int& size, int& cap, char* str);
+void ExtendArray(char*** charArr, int& size, int& cap);
