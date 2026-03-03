@@ -1,3 +1,9 @@
-void FindNumWebsites(int& max, char*& startWeb, char**& outWebs, int& size, int& cap);
-void AppendString(char*** charArr, int& size, int& cap, char*& str);
-void ExtendArray(char*** charArr, int& size, int& cap);
+#ifndef RADIMTHEWEBCRAWLER_H
+#define RADIMTHEWEBCRAWLER_H
+
+#include <iostream>
+
+void FindWebsites(std::string& startWeb);
+std::string MakeUrlValid(std::string& baseURL, std::string& rawURL);
+
+#endif
