@@ -1,0 +1,3 @@
+/home/jonas/Documents/SearchEngine/Radim/build/CMakeFiles/Radim.dir
+/home/jonas/Documents/SearchEngine/Radim/build/CMakeFiles/edit_cache.dir
+/home/jonas/Documents/SearchEngine/Radim/build/CMakeFiles/rebuild_cache.dir

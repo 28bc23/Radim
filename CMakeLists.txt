@@ -4,7 +4,6 @@ project(Radim VERSION 1.0
               DESCRIPTION "Radim is an web crawler"
               LANGUAGES CXX)
 
-add_library(one STATIC src/RadimTheWebCrawler.cpp include/RadimTheWebCrawler.h)
+find_package(CURL REQUIRED)
 
-target_include_directories(one PUBLIC include)
-
+add_executable(Radim src/RadimTheWebCrawler.cpp src/RadimTheWebCrawler.h)
