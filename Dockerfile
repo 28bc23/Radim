@@ -6,7 +6,7 @@ RUN apk add --no-cache \
     build-base \
     cmake \
     curl-dev \
-    postgresql-dev
+    libpqxx
 
 COPY ./src /app/src
 

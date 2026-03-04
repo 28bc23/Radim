@@ -5,9 +5,41 @@
 #include <queue>
 #include <unordered_set>
 
+
 int main(){
 	std::string startWeb = "https://wikipedia.org";
-	FindWebsites(startWeb);
+
+  try {
+    pqxx::connection c("user=admin password=tajne_heslo host=db port=5432 dbname=search_engine target_session_attrs=read-write");
+    pqxx::work w(c);
+    w.exec("CREATE TABLE IF NOT EXISTS websites (url TEXT PRIMARY KEY, title TEXT, seen_count INT DEFAULT 1, is_visited BOOLEAN DEFAULT FALSE);");
+    w.commit();
+
+    pqxx::work w2(c);
+    pqxx::result rows = w2.exec_params("SELECT url FROM websites WHERE url=$1;", startWeb);
+    w2.commit();
+
+    if (rows.size() == 0){
+      pqxx::work w3(c);
+      w3.exec_params("INSERT INTO websites (url) VALUES ($1) ON CONFLICT DO NOTHING", startWeb);
+      w3.commit();
+    }else{
+      pqxx::work w4(c);
+      pqxx::result rows2 = w4.exec("SELECT url FROM websites WHERE is_visited=FALSE;");
+      w4.commit();
+
+      if (rows2.size() > 0){
+        startWeb = rows2[0].as<std::string>();
+      }else{
+        std::cout << "No new websites to explore >> exiting";
+        return 1;
+      }
+    }
+    FindWebsites(startWeb, c);
+  } catch (const std::exception &e) {
+    cerr << e.what() << endl;
+    return 1;
+  }
 }
 
 size_t WriteCallback(void* contents, size_t size, size_t nmemb, void* userp){
@@ -15,7 +47,7 @@ size_t WriteCallback(void* contents, size_t size, size_t nmemb, void* userp){
 	return size * nmemb;
 }
 
-void FindWebsites(std::string& startWeb){
+void FindWebsites(std::string& startWeb, pqxx::connection& c){
 
 	std::queue<std::string> toVisit;
     	std::unordered_set<std::string> visited;

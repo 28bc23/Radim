@@ -8,7 +8,9 @@ project(Radim VERSION 1.0
               LANGUAGES CXX)
 
 find_package(CURL REQUIRED)
+find_package(libpqxx REQUIRED)
 
 add_executable(Radim src/RadimTheWebCrawler.cpp src/RadimTheWebCrawler.h)
 
 target_link_libraries(Radim PRIVATE CURL::libcurl)
+target_link_libraries(Radim PRIVATE pqxx)
