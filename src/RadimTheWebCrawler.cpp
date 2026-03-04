@@ -16,12 +16,12 @@ int main(){
     w.commit();
 
     pqxx::work w2(c);
-    pqxx::result rows = w2.exec_params("SELECT url FROM websites WHERE url=$1;", startWeb);
+    pqxx::result rows = w2.exec("SELECT url FROM websites WHERE url=$1;", pqxx::params{startWeb});
     w2.commit();
 
     if (rows.size() == 0){
       pqxx::work w3(c);
-      w3.exec_params("INSERT INTO websites (url) VALUES ($1) ON CONFLICT DO NOTHING", startWeb);
+      w3.exec("INSERT INTO websites (url) VALUES ($1) ON CONFLICT DO NOTHING", pqxx::params{startWeb});
       w3.commit();
     }else{
       pqxx::work w4(c);
@@ -29,7 +29,7 @@ int main(){
       w4.commit();
 
       if (rows2.size() > 0){
-        startWeb = rows2[0].as<std::string>();
+        startWeb = rows2[0][0].as<std::string>();
       }else{
         std::cout << "No new websites to explore >> exiting";
         return 1;
@@ -37,7 +37,7 @@ int main(){
     }
     FindWebsites(startWeb, c);
   } catch (const std::exception &e) {
-    cerr << e.what() << endl;
+    std::cerr << e.what() << std::endl;
     return 1;
   }
 }

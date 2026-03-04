@@ -13,4 +13,4 @@ find_package(libpqxx REQUIRED)
 add_executable(Radim src/RadimTheWebCrawler.cpp src/RadimTheWebCrawler.h)
 
 target_link_libraries(Radim PRIVATE CURL::libcurl)
-target_link_libraries(Radim PRIVATE pqxx)
+target_link_libraries(Radim PRIVATE libpqxx::pqxx)
