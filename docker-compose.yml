@@ -17,7 +17,7 @@ services:
 
   crawler:
     build:
-      context: ./
+      context: ./RadimTheWebCrawler
       dockerfile: Dockerfile
     container_name: radim_crawler
     depends_on:

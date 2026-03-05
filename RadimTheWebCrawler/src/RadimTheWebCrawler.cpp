@@ -79,12 +79,14 @@ int main(){
 
       if (rows2.size() > 0){
         startWeb = rows2[0][0].as<std::string>();
-        std::cout << "Using: " << rows2[0][0].as<std::string>() << " as start web" << std::endl;
+        //std::cout << "Using: " << rows2[0][0].as<std::string>() << " as start web" << std::endl;
       }else{
         std::cerr << "No new websites to explore >> exiting";
         return 1;
       }
     }
+
+    std::cout << "Using: " << startWeb << " as a starting web" << std::endl;
     FindWebsites(startWeb, c);
   } catch (const std::exception &e) {
     std::cerr << e.what() << std::endl;
