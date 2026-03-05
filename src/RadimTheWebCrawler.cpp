@@ -4,13 +4,62 @@
 #include <thread>
 #include <queue>
 #include <unordered_set>
-
+#include <cstdlib>
+#include <format>
 
 int main(){
-	std::string startWeb = "https://wikipedia.org";
+
+  const char* dbHostEnv = std::getenv("DB_HOST");
+  const char* dbUserEnv = std::getenv("DB_USER");
+  const char* dbNameEnv = std::getenv("DB_NAME");
+  const char* dbPasswdEnv = std::getenv("DB_PASS");
+  const char* dbStartWebEnv = std::getenv("START_WEB");
+
+	std::string dbHost; 
+	std::string dbUser; 
+	std::string dbName;
+	std::string dbPasswd;
+	std::string startWeb;
+
+  if(dbHostEnv != nullptr){
+    dbHost = dbHostEnv;
+    std::cout << "database host loaded from env variable" << std::endl;
+  }else{
+    std::cerr << "DB_HOST env variable is not set" << std::endl;
+    return 1;
+  }
+  if(dbUserEnv != nullptr){
+    dbUser = dbUserEnv;
+    std::cout << "database user loaded from env variable" << std::endl;
+  }else{
+    std::cerr << "DB_USER env variable is not set" << std::endl;
+    return 1;
+  }
+  if(dbNameEnv != nullptr){
+    dbName = dbNameEnv;
+    std::cout << "database name loaded from env variable" << std::endl;
+  }else{
+    std::cerr << "DB_NAME env variable is not set" << std::endl;
+    return 1;
+  }
+  if(dbPasswdEnv != nullptr){
+    dbPasswd = dbPasswdEnv;
+    std::cout << "database passwd loaded from env variable" << std::endl;
+  }else{
+    std::cerr << "DB_PASS env variable is not set" << std::endl;
+    return 1;
+  }
+  if(dbStartWebEnv != nullptr){
+    startWeb = dbStartWebEnv;
+    std::cout << "start web loaded from env variable" << std::endl;
+  }else{
+    std::cerr << "START_WEB env variable is not set" << std::endl;
+    return 1;
+  }
 
   try {
-    pqxx::connection c("user=admin password=passwd host=db port=5432 dbname=search_engine target_session_attrs=read-write");
+    std::string conn_command = std::format("user={} password={} host={} port={} dbname={} target_session_attrs=read-write", dbUser, dbPasswd, dbHost, 5432, dbName); 
+    pqxx::connection c(conn_command);
     pqxx::work w(c);
     w.exec("CREATE TABLE IF NOT EXISTS websites (url TEXT PRIMARY KEY, title TEXT, seen_count INT DEFAULT 1, is_visited BOOLEAN DEFAULT FALSE);");
     w.commit();
@@ -30,6 +79,7 @@ int main(){
 
       if (rows2.size() > 0){
         startWeb = rows2[0][0].as<std::string>();
+        std::cout << "Using: " << rows2[0][0].as<std::string>() << " as start web" << std::endl;
       }else{
         std::cerr << "No new websites to explore >> exiting";
         return 1;
