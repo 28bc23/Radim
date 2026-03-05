@@ -10,7 +10,7 @@ int main(){
 	std::string startWeb = "https://wikipedia.org";
 
   try {
-    pqxx::connection c("user=admin password=tajne_heslo host=db port=5432 dbname=search_engine target_session_attrs=read-write");
+    pqxx::connection c("user=admin password=passwd host=db port=5432 dbname=search_engine target_session_attrs=read-write");
     pqxx::work w(c);
     w.exec("CREATE TABLE IF NOT EXISTS websites (url TEXT PRIMARY KEY, title TEXT, seen_count INT DEFAULT 1, is_visited BOOLEAN DEFAULT FALSE);");
     w.commit();
@@ -31,7 +31,7 @@ int main(){
       if (rows2.size() > 0){
         startWeb = rows2[0][0].as<std::string>();
       }else{
-        std::cout << "No new websites to explore >> exiting";
+        std::cerr << "No new websites to explore >> exiting";
         return 1;
       }
     }
@@ -50,15 +50,13 @@ size_t WriteCallback(void* contents, size_t size, size_t nmemb, void* userp){
 void FindWebsites(std::string& startWeb, pqxx::connection& c){
 
 	std::queue<std::string> toVisit;
-    	std::unordered_set<std::string> visited;
 
 	toVisit.push(startWeb);
-	visited.insert(startWeb);
 
 	while (!toVisit.empty()){
 		std::string currentWeb = toVisit.front();
 		toVisit.pop();
-		
+   		
 		CURL* curl;
 		CURLcode res;
 		std::string readBuffer;
@@ -78,35 +76,62 @@ void FindWebsites(std::string& startWeb, pqxx::connection& c){
 	
 			if(res != CURLE_OK) {
 	                        std::cerr << "cURL ERROR: " << curl_easy_strerror(res) << std::endl;
-        	        } else {
+      } else {
 				std::regex rgx(R"-(<a\s+[^>]*href="([^"]+)")-");
+				std::regex rgxTitle(R"-(<title>([^>]*)</title>)-");
 				std::smatch match;
-				while (std::regex_search(readBuffer, match, rgx)){
-					std::string rawURL = match[1].str();
-					std::string validURL = "";
-					if (rawURL.starts_with("https://") || rawURL.starts_with("http://") || rawURL.starts_with("ftp://")){
-						validURL = rawURL;
-					}else{
-						validURL = MakeUrlValid(currentWeb, rawURL);
-					}
+				std::smatch matchTitle;
+
+        if(std::regex_search(readBuffer, matchTitle, rgxTitle)){
+          //std::cout << "Visiting: " << currentWeb << " Title: " << matchTitle[1].str() << std::endl;
+
+          pqxx::work w(c);
+          w.exec("INSERT INTO websites (url, title, is_visited) VALUES ($1, $2, TRUE) ON CONFLICT (url) DO UPDATE SET title = $2, is_visited = TRUE;", pqxx::params{currentWeb, matchTitle[1].str()});
+          w.commit();
+
+
+				  while (std::regex_search(readBuffer, match, rgx)){
+					  std::string rawURL = match[1].str();
+					  std::string validURL = "";
+					  if (rawURL.starts_with("https://") || rawURL.starts_with("http://") || rawURL.starts_with("ftp://")){
+						  validURL = rawURL;
+					  }else{
+						  validURL = MakeUrlValid(currentWeb, rawURL);
+					  }
 	
-					if(validURL != ""){
-						if(visited.find(validURL) == visited.end()){
-							std::cout << validURL << std::endl;
-							visited.insert(validURL);
-							toVisit.push(validURL);
-						}
+					  if(validURL != ""){
 
-					}
-					readBuffer = match.suffix().str();
-				}
+              pqxx::work w2(c);
+              pqxx::result rows = w2.exec("SELECT (seen_count) FROM websites WHERE url = $1", pqxx::params{validURL});
+              w2.commit();
+
+
+						  if(rows.size() == 0){
+							  //std::cout << "Found new web: " << validURL << std::endl;
+                pqxx::work w3(c);
+                w3.exec("INSERT INTO websites (url) VALUES ($1) ON CONFLICT DO NOTHING;", pqxx::params{validURL});
+                w3.commit();
+
+							  toVisit.push(validURL);
+						  }else{
+                int seen_count = rows[0][0].as<int>();
+                seen_count++;
+                pqxx::work w3(c);
+                w3.exec("UPDATE websites SET seen_count = $1 WHERE url = $2;", pqxx::params{seen_count, validURL});
+                w3.commit();
+              }
+
+					  }
+					  readBuffer = match.suffix().str();
+				  }
+        }else{
+          std::cout << "Title not found - skipping website" << std::endl;
+        }
 			}
-
-		
 		}
-		std::this_thread::sleep_for(std::chrono::seconds(1));
+		std::this_thread::sleep_for(std::chrono::milliseconds(500));
 	}
-
+  std::cerr << "no site to visit. Found dead end" << std::endl;
 }
 
 std::string MakeUrlValid(std::string& baseURL, std::string& rawURL){

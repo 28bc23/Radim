@@ -7,7 +7,7 @@ services:
     container_name: radim_db
     environment:
       POSTGRES_USER: admin
-      POSTGRES_PASSWORD: tajne_heslo
+      POSTGRES_PASSWORD: passwd
       POSTGRES_DB: search_engine
     ports:
       - "5432:5432"    
@@ -25,8 +25,9 @@ services:
     environment:
       - DB_HOST=db
       - DB_USER=admin
-      - DB_PASS=tajne_heslo
+      - DB_PASS=passwd
       - DB_NAME=search_engine
+      - START_WEB=https://wikipedia.org/
     restart: on-failure
 
 volumes:
