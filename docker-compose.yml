@@ -29,6 +29,21 @@ services:
       - DB_NAME=search_engine
       - START_WEB=https://wikipedia.org/
     restart: on-failure
-
+  search_engine:
+    build:
+      context: ./RadimTheSearchEngine
+      dockerfile: Dockerfile
+    container_name: radim_search_engine
+    tty: true
+    stdin_open: true
+    depends_on:
+      - db
+      - crawler
+    environment:
+      - DB_HOST=db
+      - DB_USER=admin
+      - DB_PASS=passwd
+      - DB_NAME=search_engine
+    restart: on-failure
 volumes:
   pgdata:

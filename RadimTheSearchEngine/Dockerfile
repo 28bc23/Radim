@@ -28,4 +28,4 @@ RUN cmake ..
 
 RUN cmake --build .
 
-CMD ["./RadimWebCrawler"]
+CMD ["./RadimSearchEngine"]
