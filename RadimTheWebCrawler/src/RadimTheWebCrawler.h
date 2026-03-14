@@ -2,9 +2,10 @@
 #define RADIMTHEWEBCRAWLER_H
 
 #include <iostream>
-#include <pqxx/pqxx>
+//#include <pqxx/pqxx>
 
-void FindWebsites(std::string& startWeb, pqxx::connection& c);
-std::string MakeUrlValid(std::string& baseURL, std::string& rawURL);
-
+namespace RadimTheWebCrawler {
+	void FindWebsites(std::string startWeb, int num);
+	std::string MakeUrlValid(std::string& baseURL, std::string& rawURL);
+}
 #endif

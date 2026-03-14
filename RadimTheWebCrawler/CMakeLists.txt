@@ -10,7 +10,9 @@ project(RadimWebCrawler VERSION 1.0
 find_package(CURL REQUIRED)
 find_package(libpqxx REQUIRED)
 
-add_executable(RadimWebCrawler src/RadimTheWebCrawler.cpp src/RadimTheWebCrawler.h)
+add_executable(RadimWebCrawler src/WebCrawlerManager.cpp src/RadimTheWebCrawler.cpp)
+
+target_include_directories(RadimWebCrawler PRIVATE src)
 
 target_link_libraries(RadimWebCrawler PRIVATE CURL::libcurl)
 target_link_libraries(RadimWebCrawler PRIVATE libpqxx::pqxx)
