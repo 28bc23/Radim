@@ -1,22 +1,17 @@
-FROM alpine:3.23.3
+FROM debian:bookworm-slim
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apk add --no-cache \
-    build-base \
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
     cmake \
-    curl-dev \
+    pkg-config \
+    libcurl4-openssl-dev \
+    libpq-dev \
+    libpqxx-dev \
+    ca-certificates \
     curl \
-    libpq-dev
-
-RUN curl -L https://github.com/jtv/libpqxx/archive/refs/tags/7.10.0.tar.gz -o libpqxx.tar.gz && \
-    tar -xzf libpqxx.tar.gz && \
-    cd libpqxx-7.10.0 && \
-    mkdir build && cd build && \
-    cmake -D SKIP_BUILD_TEST=ON .. && \
-    make -j$(nproc) && \
-    make install && \
-    cd ../.. && rm -rf libpqxx.tar.gz libpqxx-7.10.0
+    && rm -rf /var/lib/apt/lists/*
 
 COPY ./src /app/src
 

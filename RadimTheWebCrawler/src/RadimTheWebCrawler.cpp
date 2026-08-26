@@ -5,7 +5,6 @@
 #include <queue>
 #include <unordered_set>
 #include <cstdlib>
-#include <format>
 #include "WebCrawlerManager.h"
 
 size_t WriteCallback(void* contents, size_t size, size_t nmemb, void* userp){
@@ -51,17 +50,11 @@ namespace RadimTheWebCrawler {
 
 					if(std::regex_search(readBuffer, matchTitle, rgxTitle)){
 
-						//std::cout << "Visiting: " << currentWeb << " Title: " << matchTitle[1].str() << std::endl;
+						std::cout << "Visiting: " << currentWeb << " Title: " << matchTitle[1].str() << std::endl;
 						while (std::regex_search(readBuffer, match, rgx)){
 
 							std::string rawURL = match[1].str();
-							std::string validURL = "";
-							if (rawURL.starts_with("https://") || rawURL.starts_with("http://") || rawURL.starts_with("ftp://")){
-
-								validURL = rawURL;
-							}else{
-								validURL = MakeUrlValid(currentWeb, rawURL);
-							}
+							std::string validURL = MakeUrlValid(currentWeb, rawURL);
 
 							if(validURL != ""){
 								if(websites.size() < num){

@@ -27,7 +27,7 @@ services:
       - DB_USER=admin
       - DB_PASS=passwd
       - DB_NAME=search_engine
-      - START_WEB=https://wikipedia.org/
+      - START_WEB=https://en.wikipedia.org/wiki/Special:Random
     restart: on-failure
   search_engine:
     build:
